@@ -33,7 +33,7 @@ public class JwtService {
     }
 
 
-    public String getUserName(String token) {
+    public String getUsername(String token) {
         return getClaim(token, Claims::getSubject);
     }
 
