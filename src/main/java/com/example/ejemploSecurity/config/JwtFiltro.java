@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.misc.NotNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,6 +22,7 @@ import java.io.IOException;
 public class JwtFiltro extends OncePerRequestFilter {
 
     private final UserDetailsService userDetailsService;
+    private final JwtService jwtService;
 
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request,
@@ -38,7 +40,12 @@ public class JwtFiltro extends OncePerRequestFilter {
         userEmail = jwtService.getUsername(jwt);
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null){
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-
+            if (jwtService.validateToken(jwt, userDetails)){
+                UsernamePasswordAuthenticationToken tokenDeAutenticacion = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                tokenDeAutenticacion.setDetails(tokenDeAutenticacion.getDetails());
+                SecurityContextHolder.getContext().setAuthentication(tokenDeAutenticacion);
+            }
+            filterChain.doFilter(request, response);
         }
 
 
